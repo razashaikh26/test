@@ -3,10 +3,16 @@ services:
     name: vehicle-detection
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && python download_models.py
     startCommand: streamlit run main.py
     envVars:
       - key: PORT
         value: 8501
       - key: PYTHONUNBUFFERED
-        value: true 
+        value: true
+      - key: YOLO_WEIGHTS_URL
+        sync: false
+      - key: YOLO_CFG_URL
+        sync: false
+      - key: COCO_NAMES_URL
+        sync: false 
