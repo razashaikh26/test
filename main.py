@@ -12,30 +12,10 @@ MODELS_DIR = os.environ.get('MODELS_DIR', os.path.join(os.path.dirname(__file__)
 IMAGE_FOLDER = os.environ.get('IMAGE_FOLDER', os.path.join(os.path.dirname(__file__), 'test_images'))
 OUTPUT_FOLDER = os.environ.get('OUTPUT_FOLDER', os.path.join(os.path.dirname(__file__), 'output'))
 
-# Print debug info
-st.sidebar.header("Debug Info")
-st.sidebar.write(f"MODELS_DIR: {MODELS_DIR}")
-st.sidebar.write(f"Exists: {os.path.exists(MODELS_DIR)}")
-if os.path.exists(MODELS_DIR):
-    st.sidebar.write(f"Contents: {os.listdir(MODELS_DIR)}")
-
 # Model paths
 YOLO_WEIGHTS = os.environ.get('YOLO_WEIGHTS', os.path.join(MODELS_DIR, 'yolov7.weights'))
 YOLO_CONFIG = os.environ.get('YOLO_CONFIG', os.path.join(MODELS_DIR, 'yolov7.cfg'))
 COCO_NAMES = os.environ.get('COCO_NAMES', os.path.join(MODELS_DIR, 'coco.names'))
-
-st.sidebar.write(f"YOLO_WEIGHTS: {YOLO_WEIGHTS}")
-st.sidebar.write(f"Exists: {os.path.exists(YOLO_WEIGHTS)}")
-st.sidebar.write(f"YOLO_CONFIG: {YOLO_CONFIG}")
-st.sidebar.write(f"Exists: {os.path.exists(YOLO_CONFIG)}")
-st.sidebar.write(f"COCO_NAMES: {COCO_NAMES}")
-st.sidebar.write(f"Exists: {os.path.exists(COCO_NAMES)}")
-
-# Get environment variable values for debugging
-st.sidebar.write("Environment Variables:")
-st.sidebar.write(f"YOLO_WEIGHTS_URL: {os.environ.get('YOLO_WEIGHTS_URL', 'Not set')}")
-st.sidebar.write(f"YOLO_CFG_URL: {os.environ.get('YOLO_CFG_URL', 'Not set')}")
-st.sidebar.write(f"COCO_NAMES_URL: {os.environ.get('COCO_NAMES_URL', 'Not set')}")
 
 # Ensure directories exist
 for directory in [MODELS_DIR, IMAGE_FOLDER, OUTPUT_FOLDER]:
@@ -66,7 +46,7 @@ def load_coco_classes():
         return ["person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck"]
 
 # Vehicle Detection Function
-def detect_vehicles(image_path, net, output_layers, coco_classes, conf_threshold=0.15, nms_threshold=0.5):
+def detect_vehicles(image_path, net, output_layers, coco_classes, conf_threshold=0.3, nms_threshold=0.5):
     image = cv2.imread(image_path)
     if image is None:
         st.error(f"Error: Could not load image {image_path}")
@@ -100,13 +80,25 @@ def detect_vehicles(image_path, net, output_layers, coco_classes, conf_threshold
     # Apply Non-Maximum Suppression
     indices = cv2.dnn.NMSBoxes(boxes, confidences, conf_threshold, nms_threshold)
     vehicle_count = 0
+    
+    vehicle_colors = {
+        2: (0, 255, 0),    # Car - Green
+        3: (0, 165, 255),  # Motorcycle - Orange
+        5: (255, 0, 0),    # Bus - Blue
+        7: (128, 0, 128)   # Truck - Purple
+    }
 
     if len(indices) > 0:
         for i in indices.flatten():
             x, y, w, h = boxes[i]
-            label = coco_classes[class_ids[i]]  
-            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            cv2.putText(image, f"{label} {vehicle_count+1}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            label = coco_classes[class_ids[i]]
+            color = vehicle_colors.get(class_ids[i], (0, 255, 0))
+            confidence_score = confidences[i]
+            
+            # Draw rectangle and label
+            cv2.rectangle(image, (x, y), (x + w, y + h), color, 2)
+            cv2.putText(image, f"{label} {confidence_score:.2f}", (x, y - 10), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
             vehicle_count += 1
 
     # Save detected image
@@ -120,8 +112,15 @@ def detect_vehicles(image_path, net, output_layers, coco_classes, conf_threshold
 
 # Streamlit UI
 def main():
-    st.sidebar.header("🚗 AI Traffic Monitoring")
-    st.sidebar.write("Upload an image to detect vehicles.")
+    # Sidebar
+    st.sidebar.image("https://img.icons8.com/color/96/000000/traffic-jam.png", width=80)
+    st.sidebar.title("AI Traffic Monitoring")
+    st.sidebar.markdown("---")
+    st.sidebar.write("Upload an image to detect vehicles using YOLOv7.")
+    
+    # Main content
+    st.title("🚗 Vehicle Detection System")
+    st.write("This application uses YOLOv7 to detect and count vehicles in images.")
 
     # Load Model
     net, output_layers = load_yolo()
@@ -133,7 +132,16 @@ def main():
         st.info("You need to upload the YOLOv7 weights and configuration files to the models directory.")
         return
 
-    uploaded_file = st.sidebar.file_uploader("Upload an image", type=["jpg", "png"])
+    uploaded_file = st.sidebar.file_uploader("Choose an image", type=["jpg", "png", "jpeg"])
+    
+    conf_threshold = st.sidebar.slider(
+        "Confidence Threshold", 
+        min_value=0.1, 
+        max_value=1.0, 
+        value=0.3, 
+        step=0.05,
+        help="Adjust how confident the model needs to be to detect a vehicle"
+    )
 
     if uploaded_file is not None:
         # Convert uploaded image to OpenCV format
@@ -142,19 +150,36 @@ def main():
             f.write(uploaded_file.getbuffer())
 
         # Process the image
-        vehicle_count, output_path = detect_vehicles(image_path, net, output_layers, coco_classes)
+        vehicle_count, output_path = detect_vehicles(image_path, net, output_layers, coco_classes, conf_threshold=conf_threshold)
 
         # Display results
         if vehicle_count is not None:
             col1, col2 = st.columns(2)
             with col1:
-                st.image(uploaded_file, caption="Uploaded Image", use_column_width=True)
+                st.subheader("Original Image")
+                st.image(uploaded_file, use_column_width=True)
             if output_path:
                 with col2:
-                    st.image(output_path, caption=f"Processed Image - {vehicle_count} Vehicles", use_column_width=True)
+                    st.subheader(f"Processed Image ({vehicle_count} Vehicles)")
+                    st.image(output_path, use_column_width=True)
 
-            st.success(f"✅ Vehicles Detected: {vehicle_count}")
-            st.download_button("📥 Download Processed Image", data=open(output_path, "rb").read(), file_name="detected_image.jpg")
+            st.success(f"✅ Successfully detected {vehicle_count} vehicles in the image")
+            st.download_button(
+                "📥 Download Processed Image", 
+                data=open(output_path, "rb").read(), 
+                file_name="detected_image.jpg",
+                mime="image/jpeg"
+            )
+    else:
+        # Display sample images when no file is uploaded
+        st.info("👈 Upload an image using the sidebar to detect vehicles")
+        st.markdown("### How it works")
+        st.write("""
+        1. Upload an image containing traffic scenes
+        2. The AI model detects vehicles such as cars, trucks, buses, and motorcycles
+        3. View the detected vehicles with bounding boxes
+        4. Download the processed image
+        """)
 
 if __name__ == "__main__":
     main()
