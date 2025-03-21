@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: vehicle-detection
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run main.py
+    envVars:
+      - key: PORT
+        value: 8501
+      - key: PYTHONUNBUFFERED
+        value: true 
