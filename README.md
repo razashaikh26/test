@@ -19,7 +19,6 @@ A Streamlit application for vehicle detection using YOLOv7.
    ```
 3. Download the YOLOv7 model files:
    - Download `yolov7.weights` and `yolov7.cfg` from the official YOLOv7 repository
-   - Download `coco.names` file
    - Place all model files in the `models` directory
 
 4. Run the application:
@@ -32,37 +31,35 @@ A Streamlit application for vehicle detection using YOLOv7.
 1. Create a new Web Service on Render
 2. Link to your GitHub repository
 3. Use the following settings:
-   - Build Command: `pip install -r requirements.txt && python download_models.py`
+   - Build Command: `pip install -r requirements.txt && python download_from_drive.py`
    - Start Command: `streamlit run main.py`
 4. Add environment variables:
    - PORT: 8501
    - PYTHONUNBUFFERED: true
-   - YOLO_WEIGHTS_URL: URL to your YOLOv7 weights file
-   - YOLO_CFG_URL: URL to your YOLOv7 configuration file
-   - COCO_NAMES_URL: URL to your COCO class names file
+   - YOLO_WEIGHTS_URL: Google Drive link to your yolov7.weights file
+   - YOLO_CFG_URL: Google Drive link to your yolov7.cfg file
 
-## Providing Model Files
+## Using Google Drive Links
 
-Since Render Shell is a paid feature, you can use one of these methods to provide your model files:
+For Google Drive links, you can use the regular sharing links:
 
-### Option 1: Cloud Storage URLs
+1. Upload your model files to Google Drive
+2. Right-click on each file → "Share" → "Anyone with the link" → "Copy link"
+3. Use these links in your Render environment variables
 
-1. Upload your model files (yolov7.weights, yolov7.cfg, coco.names) to a cloud storage service that allows direct downloads (Google Drive, Dropbox, AWS S3, etc.)
-2. Set the download URLs as environment variables in Render:
-   - YOLO_WEIGHTS_URL
-   - YOLO_CFG_URL
-   - COCO_NAMES_URL
+The download script will automatically convert the sharing links to direct download links.
 
-### Option 2: Git LFS
+Example:
+- Original link: `https://drive.google.com/file/d/1abcdefg123456/view?usp=sharing`
+- Used as: `YOLO_WEIGHTS_URL=https://drive.google.com/file/d/1abcdefg123456/view?usp=sharing`
 
-1. Install Git LFS: `git lfs install`
-2. Track your large model files:
-   ```
-   git lfs track "*.weights"
-   git lfs track "*.cfg"
-   ```
-3. Add, commit, and push your model files
-4. Render will automatically fetch these files during deployment
+## Troubleshooting
+
+If you encounter errors downloading the model files:
+
+1. Make sure your Google Drive links are publicly accessible (set to "Anyone with the link can view")
+2. Check the build logs in Render for any error messages
+3. For large files (>100MB), try splitting them or using a different hosting service
 
 ## License
 

@@ -9,14 +9,34 @@ MODELS_DIR = os.environ.get('MODELS_DIR', os.path.join(os.path.dirname(__file__)
 IMAGE_FOLDER = os.environ.get('IMAGE_FOLDER', os.path.join(os.path.dirname(__file__), 'test_images'))
 OUTPUT_FOLDER = os.environ.get('OUTPUT_FOLDER', os.path.join(os.path.dirname(__file__), 'output'))
 
-# Ensure directories exist
-for directory in [MODELS_DIR, IMAGE_FOLDER, OUTPUT_FOLDER]:
-    os.makedirs(directory, exist_ok=True)
+# Print debug info
+st.sidebar.header("Debug Info")
+st.sidebar.write(f"MODELS_DIR: {MODELS_DIR}")
+st.sidebar.write(f"Exists: {os.path.exists(MODELS_DIR)}")
+if os.path.exists(MODELS_DIR):
+    st.sidebar.write(f"Contents: {os.listdir(MODELS_DIR)}")
 
 # Model paths
 YOLO_WEIGHTS = os.environ.get('YOLO_WEIGHTS', os.path.join(MODELS_DIR, 'yolov7.weights'))
 YOLO_CONFIG = os.environ.get('YOLO_CONFIG', os.path.join(MODELS_DIR, 'yolov7.cfg'))
 COCO_NAMES = os.environ.get('COCO_NAMES', os.path.join(MODELS_DIR, 'coco.names'))
+
+st.sidebar.write(f"YOLO_WEIGHTS: {YOLO_WEIGHTS}")
+st.sidebar.write(f"Exists: {os.path.exists(YOLO_WEIGHTS)}")
+st.sidebar.write(f"YOLO_CONFIG: {YOLO_CONFIG}")
+st.sidebar.write(f"Exists: {os.path.exists(YOLO_CONFIG)}")
+st.sidebar.write(f"COCO_NAMES: {COCO_NAMES}")
+st.sidebar.write(f"Exists: {os.path.exists(COCO_NAMES)}")
+
+# Get environment variable values for debugging
+st.sidebar.write("Environment Variables:")
+st.sidebar.write(f"YOLO_WEIGHTS_URL: {os.environ.get('YOLO_WEIGHTS_URL', 'Not set')}")
+st.sidebar.write(f"YOLO_CFG_URL: {os.environ.get('YOLO_CFG_URL', 'Not set')}")
+st.sidebar.write(f"COCO_NAMES_URL: {os.environ.get('COCO_NAMES_URL', 'Not set')}")
+
+# Ensure directories exist
+for directory in [MODELS_DIR, IMAGE_FOLDER, OUTPUT_FOLDER]:
+    os.makedirs(directory, exist_ok=True)
 
 # Load YOLO model
 @st.cache_resource
