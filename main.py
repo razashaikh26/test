@@ -4,6 +4,9 @@ import numpy as np
 import os
 from PIL import Image
 
+# Set page config first - must be the first Streamlit command
+st.set_page_config(page_title="Vehicle Detection", layout="wide")
+
 # Define paths based on your setup
 MODELS_DIR = os.environ.get('MODELS_DIR', os.path.join(os.path.dirname(__file__), 'models'))
 IMAGE_FOLDER = os.environ.get('IMAGE_FOLDER', os.path.join(os.path.dirname(__file__), 'test_images'))
@@ -117,8 +120,6 @@ def detect_vehicles(image_path, net, output_layers, coco_classes, conf_threshold
 
 # Streamlit UI
 def main():
-    st.set_page_config(page_title="Vehicle Detection", layout="wide")
-
     st.sidebar.header("🚗 AI Traffic Monitoring")
     st.sidebar.write("Upload an image to detect vehicles.")
 
