@@ -1,12 +1,13 @@
-# AI Traffic Monitoring
+# AI Traffic Monitoring with YOLOv8
 
-A Streamlit application for vehicle detection using YOLOv7.
+An advanced vehicle detection system using YOLOv8 and Streamlit.
 
 ## Features
 
-- Upload images to detect vehicles
-- Count and classify vehicles in images
-- Download processed images with bounding boxes
+- Multiple input sources: image upload, webcam, IP camera, and video files
+- Real-time vehicle detection and counting
+- Adjustable confidence threshold 
+- Download processed images
 
 ## Setup Instructions
 
@@ -17,13 +18,13 @@ A Streamlit application for vehicle detection using YOLOv7.
    ```
    pip install -r requirements.txt
    ```
-3. Download the YOLOv7 model files:
-   - Download `yolov7.weights` and `yolov7.cfg` from the official YOLOv7 repository
-   - Place all model files in the `models` directory
-
+3. Download the YOLOv8 model:
+   ```
+   python download_model.py
+   ```
 4. Run the application:
    ```
-   streamlit run main.py
+   streamlit run traffic22.py
    ```
 
 ### Deployment on Render
@@ -31,35 +32,37 @@ A Streamlit application for vehicle detection using YOLOv7.
 1. Create a new Web Service on Render
 2. Link to your GitHub repository
 3. Use the following settings:
-   - Build Command: `pip install -r requirements.txt && python download_from_drive.py`
-   - Start Command: `streamlit run main.py`
+   - Build Command: `pip install -r requirements.txt && python download_model.py`
+   - Start Command: `streamlit run traffic22.py`
 4. Add environment variables:
    - PORT: 8501
    - PYTHONUNBUFFERED: true
-   - YOLO_WEIGHTS_URL: Google Drive link to your yolov7.weights file
-   - YOLO_CFG_URL: Google Drive link to your yolov7.cfg file
+   - YOLO_MODEL_URL (optional): URL to your custom YOLOv8 model
 
-## Using Google Drive Links
+## Usage
 
-For Google Drive links, you can use the regular sharing links:
+1. Choose an input source:
+   - **Image Upload**: Process a single image
+   - **Webcam**: Live detection from a connected camera (local use only)
+   - **IP Camera**: Connect to an IP camera stream
+   - **Video File**: Process an uploaded video file
 
-1. Upload your model files to Google Drive
-2. Right-click on each file → "Share" → "Anyone with the link" → "Copy link"
-3. Use these links in your Render environment variables
+2. Adjust the confidence threshold slider to control detection sensitivity
 
-The download script will automatically convert the sharing links to direct download links.
+3. For video sources:
+   - Click "Start Detection" to begin processing
+   - Click "Stop Detection" to end processing
 
-Example:
-- Original link: `https://drive.google.com/file/d/1abcdefg123456/view?usp=sharing`
-- Used as: `YOLO_WEIGHTS_URL=https://drive.google.com/file/d/1abcdefg123456/view?usp=sharing`
+## Technical Details
 
-## Troubleshooting
+- Uses YOLOv8 from Ultralytics
+- Detects vehicles including cars, motorcycles, buses, and trucks
+- Real-time FPS calculation for video streams
 
-If you encounter errors downloading the model files:
+## Limitations on Render
 
-1. Make sure your Google Drive links are publicly accessible (set to "Anyone with the link can view")
-2. Check the build logs in Render for any error messages
-3. For large files (>100MB), try splitting them or using a different hosting service
+- Webcam access is not available on the Render platform
+- For heavy video processing, consider using a higher-tier Render plan
 
 ## License
 
